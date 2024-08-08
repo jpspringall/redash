@@ -41,7 +41,10 @@ class DynamoDBSQL(BaseSQLQueryRunner):
         return {
             "type": "object",
             "properties": {
-                "region": {"type": "string", "default": "us-east-1"},
+                "region": {"type": "string", "default": "ap-southeast-2"},
+                "is_secure": {"type": "boolean", "default": True},
+                "host": {"type": "string"},
+                "port": {"type": "number", "default": 443},
                 "access_key": {"type": "string"},
                 "secret_key": {"type": "string"},
             },

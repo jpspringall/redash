@@ -11,15 +11,16 @@ x-redash-service: &redash-service
   env_file:
     - .env
 x-redash-environment: &redash-environment
-  REDASH_LOG_LEVEL: "INFO"
+  REDASH_LOG_LEVEL: "DEBUG"
   REDASH_REDIS_URL: "redis://redis:6379/0"
   REDASH_DATABASE_URL: "postgresql://postgres@postgres/postgres"
   REDASH_RATELIMIT_ENABLED: "false"
-  REDASH_MAIL_DEFAULT_SENDER: "redash@example.com"
+#  REDASH_MAIL_DEFAULT_SENDER: "redash@example.com"
   REDASH_MAIL_SERVER: "email"
   REDASH_ENFORCE_CSRF: "true"
   # Set secret keys in the .env file
 services:
+  # docker-compose stop server && docker-compose run --rm --service-ports server debug_server && docker-compose start server
   server:
     <<: *redash-service
     command: dev_server
@@ -39,17 +40,22 @@ services:
       - server
     environment:
       <<: *redash-environment
+  # docker-compose stop worker && docker-compose run --rm --service-ports worker debug_worker && docker-compose start worker      
   worker:
     <<: *redash-service
     command: dev_worker
     depends_on:
       - server
+    ports:
+      - "5679:5678"      
     environment:
       <<: *redash-environment
       PYTHONUNBUFFERED: 0
   redis:
     image: redis:3-alpine
     restart: unless-stopped
+    ports:
+      - "6379:6379"
   postgres:
     image: postgres:9.5-alpine
     # The following turns the DB into less durable, but gains significant performance improvements for the tests run (x3
@@ -61,8 +67,36 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_HOST_AUTH_METHOD: "trust"
+    volumes:
+      - ./docker-data/postgres/data:/var/lib/postgresql/data
   email:
     image: djfarrelly/maildev
     ports:
       - "1080:80"
     restart: unless-stopped
+  # dynamodb-gui:
+  #   image: "jpspringall/dynamodb-gui"
+  #   ports:
+  #     - "8001:8001"
+  #   environment:
+  #     DYNAMO_ENDPOINT: "http://datasource-dynamodb-local:8000"
+  datasource-dynamodb-local:
+    image: "amazon/dynamodb-local:latest"
+    command: "-jar DynamoDBLocal.jar"
+    ports:
+      - "8000:8000"
+    working_dir: /home/dynamodblocal
+  datasource-postgres-16:
+    image: postgres:16-bookworm
+    networks:
+      default:
+        aliases:
+          - datasource-postgres-1
+          - datasource-postgres-2
+    environment:
+     - POSTGRES_USER=administrator
+     - POSTGRES_PASSWORD=P@ssw0rd
+    ports:
+     - "5432:5432"
+    volumes:
+      - ./docker-data/datasource-postgres-16/data:/var/lib/postgresql/data
