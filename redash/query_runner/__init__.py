@@ -223,6 +223,10 @@ class BaseSQLQueryRunner(BaseQueryRunner):
     @property
     def supports_auto_limit(self):
         return True
+    
+    @property
+    def supports_sharding(self):
+        return False
 
     def apply_auto_limit(self, query_text, should_apply_auto_limit):
         if should_apply_auto_limit:

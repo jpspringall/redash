@@ -342,6 +342,7 @@ default_query_runners = [
     "redash.query_runner.couchbase",
     "redash.query_runner.mysql",
     "redash.query_runner.pg",
+    "redash.query_runner.pg_sharded",
     "redash.query_runner.url",
     "redash.query_runner.influx_db",
     "redash.query_runner.elasticsearch",
